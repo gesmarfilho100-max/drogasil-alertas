@@ -1,0 +1,37 @@
+name: Drogasil Monitor
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # roda a cada 6 horas
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          PCT_DROP_ALERT: ${{ secrets.PCT_DROP_ALERT }}
+          TARGET_PRICES: ${{ secrets.TARGET_PRICES }}
+        run: python bot.py
+
+      - name: Save DB
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add prices.json || true
+          git commit -m "update prices" || true
+          git push || true
